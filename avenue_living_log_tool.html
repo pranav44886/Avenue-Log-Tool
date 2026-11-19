@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Avenue Living – CCTV Log Tool</title>
+<style>
+  :root{color-scheme:dark;--bg:#0f172a;--card:rgba(255,255,255,.08);--text:#f1f5f9;--muted:rgba(255,255,255,.62);--accent:#60a5fa;--accent-soft:rgba(96,165,250,.20);--border:rgba(255,255,255,.18);--ok:#4ade80;--grad:linear-gradient(135deg,#3b82f6,#8b5cf6)}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);padding:16px}
+  .wrap{max-width:900px;margin:0 auto}
+  h1{font-size:20px;margin:0 0 12px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px}
+  label.lbl{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em}
+  input[type=text],input[type=time],select{width:100%;padding:10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:15px}
+  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+  .row>*{flex:1}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;max-height:200px;overflow-y:auto}
+  .chip,.ev{border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:999px;padding:5px 10px;font-size:12px;cursor:pointer;font-family:ui-monospace,Menlo,Consolas,monospace}
+  .chip:hover,.ev:hover{border-color:var(--accent)}
+  .chip.sel,.ev.sel{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .ev{border-radius:8px;text-align:left;font-family:inherit;font-size:13px;padding:6px 12px}
+  .tabs{display:flex;gap:6px;margin-bottom:10px}
+  .tab{flex:1;padding:9px;border:1px solid var(--border);background:var(--bg);color:var(--text);border-radius:8px;cursor:pointer;font-size:14px}
+  .tab.sel{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);font-weight:600}
+  .evs{display:flex;flex-wrap:wrap;gap:6px}
+  .out{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:14px;padding:10px;border:1px dashed var(--border);border-radius:8px;min-height:42px;word-break:break-word}
+  button.act{padding:10px 16px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:15px;cursor:pointer}
+  button.sec{padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text);font-size:14px;cursor:pointer}
+  .hist div{padding:6px 0;border-bottom:1px solid var(--border);font-size:13px;font-family:ui-monospace,Menlo,Consolas,monospace;cursor:pointer;word-break:break-word}
+  .hist div:last-child{border:0}
+  .toast{color:var(--ok);font-size:13px;height:18px}
+  .chk{display:flex;align-items:center;gap:6px;font-size:14px;flex:0 0 auto}
+  .prop{font-size:13px;color:var(--muted);margin-top:6px;min-height:18px}
+  #lock{position:fixed;inset:0;z-index:100;padding:16px;display:flex;align-items:center;justify-content:center;
+    background:radial-gradient(1200px 600px at 15% 10%,#3b82f6 0%,transparent 55%),radial-gradient(900px 500px at 90% 90%,#8b5cf6 0%,transparent 55%),linear-gradient(135deg,#0f172a,#1e293b)}
+  #lock .box{width:100%;max-width:360px;text-align:center;padding:32px 26px 26px;border-radius:20px;color:#fff;
+    background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);box-shadow:0 20px 60px rgba(0,0,0,.45);animation:rise .5s ease both}
+  #lock .icon{width:64px;height:64px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    background:linear-gradient(135deg,#60a5fa,#8b5cf6);box-shadow:0 8px 24px rgba(96,165,250,.45)}
+  #lock h2{margin:0 0 4px;font-size:20px;letter-spacing:.2px}
+  #lock p{margin:0 0 20px;color:rgba(255,255,255,.7);font-size:13px}
+  #lock .field{position:relative}
+  #lock input{width:100%;padding:13px 44px 13px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.25);color:#fff;font-size:16px;letter-spacing:2px;outline:none;transition:border .2s,box-shadow .2s}
+  #lock input::placeholder{color:rgba(255,255,255,.45);letter-spacing:0}
+  #lock input:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(147,197,253,.3)}
+  #lock .eye{position:absolute;right:6px;top:50%;transform:translateY(-50%);background:none;border:0;color:rgba(255,255,255,.7);cursor:pointer;padding:8px;font-size:16px}
+  #lock .err{color:#fca5a5;font-size:13px;height:18px;margin:10px 0 4px}
+  #lock .go{width:100%;padding:13px;border:0;border-radius:12px;font-size:15px;font-weight:600;color:#fff;cursor:pointer;
+    background:linear-gradient(135deg,#3b82f6,#8b5cf6);box-shadow:0 8px 20px rgba(99,102,241,.4);transition:transform .15s,box-shadow .15s}
+  #lock .go:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(99,102,241,.5)}
+  #lock .foot{margin-top:16px;font-size:11px;color:rgba(255,255,255,.5)}
+  #lock .box.shake{animation:shake .4s}
+  @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+  @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+  .locked .wrap{display:none}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .topbar h1{margin:0}
+  body{background:radial-gradient(1200px 600px at 15% 0%,rgba(59,130,246,.55) 0%,transparent 55%),radial-gradient(900px 500px at 95% 100%,rgba(139,92,246,.55) 0%,transparent 55%),linear-gradient(135deg,#0f172a,#1e293b);background-attachment:fixed;min-height:100vh}
+  .card{border-radius:16px;background:var(--card);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 10px 30px rgba(0,0,0,.30)}
+  h1{font-size:22px;letter-spacing:.2px}
+  input[type=text],input[type=time],select{background:rgba(0,0,0,.28);border-color:var(--border);border-radius:12px;outline:none;transition:border .2s,box-shadow .2s}
+  input[type=text]:focus,input[type=time]:focus,select:focus{border-color:#93c5fd;box-shadow:0 0 0 3px rgba(147,197,253,.28)}
+  input::placeholder{color:rgba(255,255,255,.4)}
+  .chip,.ev,.tab,button.sec{background:rgba(255,255,255,.07);border-color:var(--border);color:var(--text);transition:all .15s}
+  .ev:hover,.tab:hover,button.sec:hover{background:rgba(255,255,255,.14);border-color:#93c5fd}
+  .chip.sel,.ev.sel{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(99,102,241,.4)}
+  .tab.sel{background:var(--grad);border-color:transparent;color:#fff;font-weight:600;box-shadow:0 4px 14px rgba(99,102,241,.4)}
+  button.act{background:var(--grad);border-radius:12px;font-weight:600;box-shadow:0 8px 20px rgba(99,102,241,.4);transition:transform .15s,box-shadow .15s}
+  button.act:hover{transform:translateY(-1px);box-shadow:0 12px 26px rgba(99,102,241,.5)}
+  button.sec{border-radius:12px}
+  .out{background:rgba(0,0,0,.25);border:1px dashed rgba(255,255,255,.3);border-radius:12px}
+  .hist div{border-bottom-color:rgba(255,255,255,.12)}
+  .hist div:hover{color:#93c5fd}
+  .prop{color:#93c5fd}
+  label.lbl{color:var(--muted)}
+</style>
+</head>
+<body class="locked">
+<div id="lock"><div class="box" id="lockBox">
+  <div class="icon"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/><circle cx="12" cy="16" r="1.2" fill="#fff"/></svg></div>
+  <h2>Avenue Living</h2>
+  <p>CCTV Log Tool &middot; Enter password to continue</p>
+  <div class="field">
+    <input type="password" id="pw" placeholder="Password" autocomplete="off">
+    <button class="eye" id="eye" type="button" aria-label="Show password">&#128065;</button>
+  </div>
+  <div class="err" id="pwErr"></div>
+  <button class="go" id="pwBtn">Unlock</button>
+  <div class="foot">Authorized staff only</div>
+</div></div>
+<div class="wrap">
+  <div class="topbar"><h1>Avenue Living – CCTV Log Tool</h1><button class="sec" id="lockBtn">Lock</button></div>
+
+  <div class="card">
+    <label class="lbl" for="cam">Camera tag(s) – paste</label>
+    <input type="text" id="cam" placeholder="Paste camera tag(s) here, e.g. ANGEXTFRNT1000039/ANGEXTFRNT2000039" autocomplete="off">
+    <div class="prop" id="prop"></div>
+
+  </div>
+
+  <div class="card">
+    <div class="tabs" id="tabs"></div>
+    <div class="evs" id="evs"></div>
+  </div>
+
+  <div class="card">
+    <div class="row" style="margin-bottom:10px">
+      <div style="flex:0 0 auto"><label class="lbl" for="time">Time (blank = current time)</label><input type="time" id="time"></div>
+      <button class="sec" id="now" style="flex:0 0 auto">Now</button>
+      <label class="chk"><input type="checkbox" id="autoCopy" checked> Auto-copy on select</label>
+    </div>
+    <label class="lbl">Log line</label>
+    <div class="out" id="out"></div>
+    <div class="row" style="margin-top:10px">
+      <button class="act" id="copy">Copy</button>
+      <button class="sec" id="clear">Clear</button>
+      <div class="toast" id="toast"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <label class="lbl">Recent (click to re-copy)</label>
+    <div class="hist" id="hist"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const H = 4526395573415718;
+  const hash=(str,seed=0)=>{let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,ch;i<str.length;i++){ch=str.charCodeAt(i);h1=Math.imul(h1^ch,2654435761);h2=Math.imul(h2^ch,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return 4294967296*(2097151&h2)+(h1>>>0);};
+  const lock=document.getElementById("lock"), pw=document.getElementById("pw"), err=document.getElementById("pwErr");
+  function tryUnlock(){
+    if(hash(pw.value)===H){ document.body.classList.remove("locked"); lock.style.display="none"; pw.value=""; err.textContent=""; }
+    else { err.textContent="Wrong password"; pw.value=""; pw.focus(); const bx=document.getElementById("lockBox"); bx.classList.remove("shake"); void bx.offsetWidth; bx.classList.add("shake"); }
+  }
+  document.getElementById("pwBtn").onclick=tryUnlock;
+  document.getElementById("eye").onclick=()=>{ pw.type = pw.type=== "password" ? "text" : "password"; pw.focus(); };
+  pw.addEventListener("keydown",e=>{ if(e.key=== "Enter") tryUnlock(); });
+  document.getElementById("lockBtn").onclick=()=>{ document.body.classList.add("locked"); lock.style.display="flex"; pw.focus(); };
+  pw.focus();
+})();
+// prefix -> property name
+const SITES = {
+  ANG:"Angela Dawn", GLMA:"Glenmore Gardens - Tower A (2127)", GLMB:"Glenmore Gardens - Tower B (2105)", ELT:"Glenmore Gardens - Elata Tower E", RDPW:"Reid Park Estates - West Building",
+  RDPE:"Reid Park Estates - East Building", RDPN:"Reid Park Estates - North Building",
+  WST:"West Ridge", LDS:"Lady Smith", ASH:"Ashford Manor",
+  APPA:"Applewood Village Building A", APPB:"Applewood Village Building B", APPF:"Applewood Village Building F",
+  MRD:"Meredith Road Apartments", TST:"The Stanley (Granville House)", WVR:"Waver Tree Apartments",
+  MYF:"Mayfair Manor", CNA:"Canada West Courts A", CNB:"Canada West Courts B", CNC:"Canada West Courts C"
+};
+const ADDR = {
+  APPA:"3805 Marlborough Dr NE, Calgary, AB T2A 5M1", APPB:"3805 Marlborough Dr NE, Calgary, AB T2A 5M1", APPF:"3805 Marlborough Dr NE, Calgary, AB T2A 5M1",
+  CNA:"7315 Yellowhead Trail, Edmonton, AB", CNB:"7315 Yellowhead Trail, Edmonton, AB", CNC:"7315 Yellowhead Trail, Edmonton, AB",
+  RDPN:"121 Clancy Drive, Saskatoon, SK, S7M 5J9", RDPE:"422 Fairmont Drive, Saskatoon, SK S7M 4P1", RDPW:"311 Pendygrasse road, Saskatoon, SK S7M 5J7",
+  GLMA:"2105 90 Ave SW Calgary AB", GLMB:"2105 90 Ave SW Calgary AB", ELT:"2160 Paliswood Rd SW, Calgary, AB",
+  ANG:"125 Ave O South, Saskatoon, SK", ASH:"510 Avenue X South, Saskatoon, SK", LDS:"202 Ave V South, Saskatoon, SK", WST:"208 Ave V South, Saskatoon, SK",
+  TST:"510 21 Ave SW Calgary AB", MYF:"407 5 Ave SE, AB T1A 8C2", MRD:"650 Meredith Road NE Calgary AB", WVR:"26 Maxwell Crescent, Saskatoon, SK"
+};
+const TAGS = {
+  GLMA:["GLMINTLBBYA000462"], GLMB:["GLMINTLBBYB000462"], ELT:["GLMINTNEAST000463"],
+  ANG:["ANGEXTBACK1000039","ANGEXTBACK2000039","ANGEXTFRNT1000039","ANGEXTFRNT2000039","ANGEXTPARK1000039","ANGEXTEAST1000039","ANGINTBACK000039","ANGINTMAIL1000039","ANGINTMAIL2000039","ANGINT1F000039","ANGINT2F1000039","ANGINT3F1000039","ANGINT4F1000039"],
+  RDPW:["RDPWEXTSOUTH1000428","RDPWEXTSOUTH2000428","RDPWINTSOUTH1000428","RDPWINTSOUTH2000428","RDPWEXTFRNT000428","RDPWINTFRNT1000428","RDPWINTFRNT2000428","RDPWEXTNRTH000428","RDPWINTNRTH000428"],
+  RDPE:["RDPEEXTSOUTH1000429","RDPEEXTSOUTHWEST2000429","RDPEEXTNRTH000429","RDPEINTFRNT1000429","RDPEINTFRNT2000429","RDPEINTNRTH000429","RDPEINTSOUTH1000429"],
+  RDPN:["RDPNEXTFRNT000427","RDPNEXTWEST000427","RDPNEXTEAST000427","RDPNINTFRNT000427","RDPNINTEAST000427","RDPNINTMAIL000427"],
+  WST:["WSTEXTBACK1000116","WSTEXTBACK2000116","WSTEXTFRNT1000116","WSTEXTFRNT2000116","WSTEXTPARK1000116","WSTINTBACK1000116","WSTINTFRNT1000116","WSTINT1FHALL000116","WSTINT2FHALL000116","WSTINT3FHALL000116","WSTINT4FHALL000116","WSTINTLDRY1000116","WSTINTMAIL1000116"],
+  LDS:["LDSEXTFRNT1000043","LDSEXTFRNT2000043","LDSEXTBACK1000043"], ASH:["ASHEXTBACK1000078","ASHINTBACK1000078","ASHINT2FL000078","ASHINT4FL000078"],
+  APPA:["APPAEXTSOUTH2500081","APPAINTSOUTH1500081","APPAINTSOUTH2500081","APPAEXTEAST500081","APPAINTEAST1500081","APPAINTEAST2500081","APPAEXTFRNT500081","APPAINTFRNT500081","APPAINTHALL1F2500081","APPAINTHALL3F1500081","APPAINTMAIL500081","APPAINTLBBY500081"],
+  APPB:["APPBEXTFRNT500082","APPBINTFRNT500082","APPBEXTWEST1500082","APPBEXTWEST2500082","APPBEXTNORTH500082","APPBINTNRTH1500082","APPBINTNRTH2500082","APPBINTNRTH3500082","APPBINTHALL1F2500082","APPBINTHALL1F3500082","APPBINTHALL3F1500082"],
+  APPF:["APPFEXTFRNT500086","APPFINTFRNT500086","APPFEXTEAST500086"], MRD:["MRDEXTGRBG000567","MRDEXTRAMP1000567"],
+  TST:["TSTEXTGARA000471"], WVR:["WVREXTFRNT000077","WVREXTSIDE1000077","WVREXTSIDE2000077","WVREXTBACK1000077","WVRINTFRNT1000077","WVRINTFRNT2000077","WVRINTBACK1000077"],
+  MYF:["MYFEXTFRNT1000376","MYFINTFRNT1000376"], CNA:["CNAEXTFRNT1000324","CNAEXTBACK1000324","CNAEXTPRK1000324"], CNB:["CNBEXTBACK1000325"], CNC:["CNCEXTFRNT1000326","CNCEXTBACK1000326","CNCINTFRNT1000326","CNCINTBACK1000326","CNCINTLDRY1000326"]
+};
+
+const EVENTS = {
+  "Resident": ["Resident entered the building @","Resident exited the building @","Resident left the building @","Resident movement inside the building @","Resident movement outside the building @","Resident using the laundry machine @","Resident seen in the laundry room @","Resident let another resident into the building @","Resident checked the mailbox @","Residents seen in the hallway @","Resident moving through the hallway @","Resident moving inside the hallway @","Resident seen in parking slot @"],
+  "Staff": ["Staff moving inside the building @","Staff exited the building @","Staff entered the building @","Staff working inside the building @","Staff working outside the building @","Staff working in the laundry room @","Staff placed mail in the mailbox @"],
+  "Others": ["Person moving outside the building @","Unknown people moving outside the building @","Delivery person on site @","Unknown person cycled off the site @","Unknown person walked off the site @","Unknown person movement outside the building @","Car halts at the parking area @","Car left the parking area @","Vehicle drove past the site @","Vehicle entered the parking area @","Car drove past the site @","Person passed by the site @"]
+};
+
+const $ = id => document.getElementById(id);
+let timeFmt = "12", tab = Object.keys(EVENTS)[0], ev = "", history = [], siteFilter = "";
+
+const TIME_RE = /(\d{1,2}):(\d{2})(?:\s*([AP])\.?M\.?)?/i;
+const DATE_RE = /(?:(?:Mon|Tues|Wednes|Thurs|Fri|Satur|Sun)day|Today|Yesterday)\b,?\s*(?:[A-Za-z]+\.?\s+\d{1,2}(?:st|nd|rd|th)?(?:,\s*\d{4})?,?\s*)?/ig;
+function stripStamp(text){ return text.replace(DATE_RE," ").replace(TIME_RE," ").replace(/[•·|]+/g," "); }
+function findTime(text){
+  const m = text.match(TIME_RE); if(!m) return null;
+  let h = Number(m[1]);
+  if(m[3]){ h = h % 12; if(m[3].toUpperCase()==="P") h += 12; }
+  return { v: String(h).padStart(2,"0") + ":" + m[2], fmt: m[3] ? "12" : "24" };
+}
+function parseTags(text){
+  const t = stripStamp(text).replace(/\.(?=[A-Z])/g,"").replace(/(\d{5,6})(?=[A-Z])/g,"$1 ");
+  const out = [];
+  t.split(/[\/\s,;|]+/).forEach(x=>{ x = x.trim(); if(x && !out.includes(x)) out.push(x); });
+  return out;
+}
+function prefixOf(tag){ const m = tag.match(/^([A-Z]+?)(?:EXT|INT)/); return m ? m[1] : null; }
+function siteOf(tag){
+  const p = prefixOf(tag); if(!p) return null;
+  if(p=== "RDP"){ const c = tag[3]; return SITES["RDP"+c] ? "RDP"+c : null; }
+  if(p=== "APP"){ const c = tag[3]; return SITES["APP"+c] ? "APP"+c : null; }
+  if(p=== "RDPE"||p=== "RDPW"||p=== "RDPN") return p;
+  return SITES[p] ? p : null;
+}
+function siteOfAny(tag){
+  const p = prefixOf(tag);
+  if(p=== "GLM" && tag.endsWith("000463")) return "ELT";
+  if(p=== "GLM") return tag.includes("LBBYB") ? "GLMB" : "GLMA";
+  return p && SITES[p] ? p : null;
+}
+function tagString(){ return parseTags($("cam").value).join("/"); }
+
+function renderProp(){
+  const props = [];
+  parseTags($("cam").value).forEach(t=>{ const k = siteOfAny(t); if(k && !props.includes(SITES[k])) props.push(SITES[k]); });
+  $("prop").textContent = props.length ? "Property: " + props.join(", ") : "";
+}
+function renderTabs(){
+  $("tabs").innerHTML = "";
+  Object.keys(EVENTS).forEach(t=>{ const b=document.createElement("button"); b.className="tab"+(t===tab?" sel":""); b.textContent=t; b.onclick=()=>{tab=t;renderTabs();renderEvs();}; $("tabs").appendChild(b); });
+}
+function renderEvs(){
+  $("evs").innerHTML = "";
+  EVENTS[tab].forEach(e=>{ const b=document.createElement("button"); b.className="ev"+(e===ev?" sel":""); b.textContent=e.replace(/ @$/," "); b.onclick=()=>{ev=e;renderEvs();update(true);}; $("evs").appendChild(b); });
+}
+function fmtTime(v){
+  let h,m;
+  if(v){ [h,m]=v.split(":").map(Number); } else { const d=new Date(); h=d.getHours(); m=d.getMinutes(); }
+  if(timeFmt=== "24") return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+  const ap=h>=12?"pm":"am"; h=h%12||12;
+  return h+":"+String(m).padStart(2,"0")+ap;
+}
+function line(){
+  if(!ev) return "";
+  const tags=parseTags($("cam").value), groups=[];
+  tags.forEach(t=>{ const k=siteOfAny(t); let g=groups.find(x=>x.k===k); if(!g){g={k,tags:[]};groups.push(g);} g.tags.push(t); });
+  let head;
+  if(groups.length && groups.every(g=>g.k)){ head=groups.map(g=>g.tags.join("/")+"-"+SITES[g.k]+"-"+ADDR[g.k]).join(" / "); }
+  else if(groups.length){ head=tags.join("/"); if(siteFilter) head+= "-"+SITES[siteFilter]+"-"+ADDR[siteFilter]; }
+  else if(siteFilter){ head=SITES[siteFilter]+"-"+ADDR[siteFilter]; } else head="";
+  const body=ev.replace(/ @$/," ");
+  return (head?head+"-":"")+body+" @ "+fmtTime($("time").value);
+}
+function update(fromClick){
+  renderProp(); const s=line(); $("out").textContent=s;
+  if(fromClick && s && $("autoCopy").checked && ev && (tagString()||siteFilter)) doCopy();
+}
+async function copyText(s){
+  try{ await navigator.clipboard.writeText(s); }
+  catch(e){ const t=document.createElement("textarea"); t.value=s; document.body.appendChild(t); t.select(); document.execCommand("copy"); t.remove(); }
+  $("toast").textContent="Copied ✓"; setTimeout(()=>$("toast").textContent="",1500);
+}
+async function doCopy(){ const s=line(); if(!s) return; await copyText(s); history.unshift(s); history=[...new Set(history)].slice(0,10); renderHist(); }
+function renderHist(){ $("hist").innerHTML=""; history.forEach(h=>{ const d=document.createElement("div"); d.textContent=h; d.onclick=()=>copyText(h); $("hist").appendChild(d); }); }
+let timeFromPaste=false;
+function syncPasted(){ const tm=findTime($("cam").value); if(tm){$("time").value=tm.v;timeFmt=tm.fmt;timeFromPaste=true;} else if(timeFromPaste){$("time").value="";timeFmt="12";timeFromPaste=false;} }
+$("cam").addEventListener("input",()=>{syncPasted();update(false);});
+$("cam").addEventListener("paste",()=>setTimeout(()=>{syncPasted();update(true);},0));
+$("time").addEventListener("input",()=>update(false));
+$("now").onclick=()=>{const d=new Date();$("time").value=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");update(false);};
+$("copy").onclick=doCopy;
+$("clear").onclick=()=>{$("cam").value="";$("time").value="";timeFromPaste=false;timeFmt="12";ev="";renderEvs();update(false);};
+renderTabs();renderEvs();update(false);
+</script>
+</body>
+</html>
