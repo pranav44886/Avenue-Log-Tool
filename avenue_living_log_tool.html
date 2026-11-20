@@ -196,7 +196,7 @@ const TAGS = {
   APPF:["APPFEXTFRNT500086","APPFINTFRNT500086","APPFEXTEAST500086"],
   MRD:["MRDEXTGRBG000567","MRDEXTRAMP1000567"],
   TST:["TSTEXTGARA000471"],
-  WVR:["WVREXTFRNT000077","WVREXTSIDE1000077","WVREXTSIDE2000077","WVREXTBACK1000077","WVRINTFRNT1000077","WVRINTFRNT2000077","WVRINTBACK1000077"],
+  WVR:["side1","side2","Front","WVREXTFRNT000077","WVREXTSIDE1000077","WVREXTSIDE2000077","WVREXTBACK1000077","WVRINTFRNT1000077","WVRINTFRNT2000077","WVRINTBACK1000077"],
   MYF:["MYFEXTFRNT1000376","MYFINTFRNT1000376"],
   CNA:["CNAEXTFRNT1000324","CNAEXTBACK1000324","CNAEXTPRK1000324"],
   CNB:["CNBEXTBACK1000325"],
@@ -218,7 +218,7 @@ const EVENTS = {
   ],
   "Others": [
     "Person moving outside the building @","Unknown people moving outside the building @","Delivery person on site @",
-    "Unknown person cycled off the site @","Unknown person walked off the site @","Unknown person movement outside the building @",
+    "Unknown person cycled off the site @","A person cycled off the site @","Unknown person walked off the site @","Unknown person movement outside the building @",
     "Car halts at the parking area @","Car left the parking area @","Vehicle drove past the site @",
     "Vehicle entered the parking area @","Car drove past the site @","Person passed by the site @"
   ]
@@ -257,7 +257,9 @@ function siteOf(tag){
   if(p==="RDPE"||p==="RDPW"||p==="RDPN") return p;
   return SITES[p] ? p : null;
 }
+const PLAIN_TAGS = { side1:"WVR", side2:"WVR", front:"WVR" };
 function siteOfAny(tag){
+  if(PLAIN_TAGS[tag.toLowerCase()]) return PLAIN_TAGS[tag.toLowerCase()];
   // RDPEEXT... -> prefix regex gives "RDPE"; APPAEXT -> "APPA"
   const p = prefixOf(tag);
   if(p==="GLM" && tag.endsWith("000463")) return "ELT";
