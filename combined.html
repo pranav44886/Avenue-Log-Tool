@@ -331,7 +331,7 @@ function fmtTime(v){
   if(v){ [h,m] = v.split(":").map(Number); }
   else { const d = new Date(); h = d.getHours(); m = d.getMinutes(); }
   if(timeFmt==="24") return String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0");
-  const ap = h>=12 ? "pm" : "am";
+  const ap = h>=12 ? "PM" : "AM";
   h = h%12 || 12;
   return h + ":" + String(m).padStart(2,"0") + ap;
 }
@@ -356,7 +356,7 @@ function line(){
     head = SITES[siteFilter] + "-" + ADDR[siteFilter];
   } else head = "";
   const body = ev.replace(/ @$/,"");
-  return (head ? head + "-" : "") + body + " @ " + fmtTime($("time").value);
+  return (head ? head + "-" : "") + body + " @" + fmtTime($("time").value);
 }
 function update(fromClick){
   renderProp();
