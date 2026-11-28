@@ -29,13 +29,14 @@ jobs:
         run: |
           mkdir -p _site
           cp *.html _site/
-          test -f _site/avenue_living_log_tool.html
+          cp _site/avenue_living_log_tool.html _site/index.html
+          test -f _site/index.html
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: ./_site
 
